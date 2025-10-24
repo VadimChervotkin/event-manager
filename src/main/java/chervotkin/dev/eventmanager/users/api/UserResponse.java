@@ -1,4 +1,4 @@
-package chervotkin.dev.eventmanager.users;
+package chervotkin.dev.eventmanager.users.api;
 
 public record UserResponse(
         Long id,
