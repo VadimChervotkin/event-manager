@@ -33,20 +33,14 @@ public class SecurityConfiguration {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.debug(true).ignoring()
-                .requestMatchers("/css/**",
-                        "/js/**",
-                        "img/**",
-                        "/lib/**",
-                        "/favicon.ico",
-                        "/swagger-ui/**",
-                        "/v2/api-docs",
-                        "/v3/api-docs",
-                        "/configuration/ui",
-                        "/swagger-resources/**",
-                        "/configuration/security",
+                .requestMatchers("/swagger-ui/**",
                         "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
                         "/webjars/**",
-                        "/v3/api-docs/swagger-config"
+                        "/openapi.yaml",
+                        "/configuration/ui",
+                        "/configuration/security"
                 );
     }
 
@@ -67,6 +61,7 @@ public class SecurityConfiguration {
                         authorizeHttpRequest
                                 .requestMatchers(HttpMethod.POST, "/users").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/users/auth").permitAll()
+
                                 .requestMatchers(HttpMethod.GET, "/users/{userId}").hasAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/locations").hasAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/locations/{locationsId}").hasAuthority("ADMIN")

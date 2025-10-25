@@ -1,7 +1,6 @@
 package chervotkin.dev.eventmanager.users.api;
 
 import chervotkin.dev.eventmanager.users.domain.AuthenticationService;
-import chervotkin.dev.eventmanager.users.domain.User;
 import chervotkin.dev.eventmanager.users.domain.UserRegistrationService;
 import chervotkin.dev.eventmanager.users.domain.UserService;
 import jakarta.validation.Valid;
@@ -19,14 +18,16 @@ public class UserController {
     private final UserService userService;
     private final UserRegistrationService userRegistrationService;
     private final AuthenticationService authenticationService;
+    private final UserDtoConverter userDtoConverter;
 
     public UserController(UserService userService,
                           UserRegistrationService userRegistrationService,
-                          AuthenticationService authenticationService
+                          AuthenticationService authenticationService, UserDtoConverter userDtoConverter
     ) {
         this.userService = userService;
         this.userRegistrationService = userRegistrationService;
         this.authenticationService = authenticationService;
+        this.userDtoConverter = userDtoConverter;
     }
 
     @PostMapping
@@ -37,7 +38,7 @@ public class UserController {
         var user = userRegistrationService.registerUser(signUpRequest);
 
         return ResponseEntity.status(201)
-                .body(convertDomainUser(user));
+                .body(userDtoConverter.convertDomainUser(user));
     }
 
     @PostMapping("/auth")
@@ -56,15 +57,7 @@ public class UserController {
     ) {
         log.info("Get request for get user info: userId={}", userId);
         var user = userService.getUserById(userId);
-        return ResponseEntity.ok(convertDomainUser(user));
+        return ResponseEntity.ok(userDtoConverter.convertDomainUser(user));
     }
 
-    private UserDto convertDomainUser(User user) {
-        return new UserDto(
-                user.id(),
-                user.login(),
-                user.age(),
-                user.role()
-        );
-    }
 }
