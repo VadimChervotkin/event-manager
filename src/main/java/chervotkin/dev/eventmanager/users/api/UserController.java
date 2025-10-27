@@ -1,0 +1,63 @@
+package chervotkin.dev.eventmanager.users.api;
+
+import chervotkin.dev.eventmanager.users.domain.AuthenticationService;
+import chervotkin.dev.eventmanager.users.domain.UserRegistrationService;
+import chervotkin.dev.eventmanager.users.domain.UserService;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
+    private final UserService userService;
+    private final UserRegistrationService userRegistrationService;
+    private final AuthenticationService authenticationService;
+    private final UserDtoConverter userDtoConverter;
+
+    public UserController(UserService userService,
+                          UserRegistrationService userRegistrationService,
+                          AuthenticationService authenticationService, UserDtoConverter userDtoConverter
+    ) {
+        this.userService = userService;
+        this.userRegistrationService = userRegistrationService;
+        this.authenticationService = authenticationService;
+        this.userDtoConverter = userDtoConverter;
+    }
+
+    @PostMapping
+    public ResponseEntity<UserDto> registerUser (
+            @RequestBody @Valid SignUpRequest signUpRequest
+    ) {
+        log.info("Get request for sign in: login={}", signUpRequest.login());
+        var user = userRegistrationService.registerUser(signUpRequest);
+
+        return ResponseEntity.status(201)
+                .body(userDtoConverter.convertDomainUser(user));
+    }
+
+    @PostMapping("/auth")
+    public ResponseEntity<JwtTokenResponse> authenticate(
+            @RequestBody @Valid SignInRequest signInRequest
+    ) {
+        log.info("Get request for authenticate user: login={}", signInRequest.login());
+        var token = authenticationService.authenticateUser(signInRequest);
+        return ResponseEntity.ok(new JwtTokenResponse(token));
+
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDto> getUserInfo(
+            @PathVariable Long userId
+    ) {
+        log.info("Get request for get user info: userId={}", userId);
+        var user = userService.getUserById(userId);
+        return ResponseEntity.ok(userDtoConverter.convertDomainUser(user));
+    }
+
+}
