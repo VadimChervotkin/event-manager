@@ -3,6 +3,7 @@ package chervotkin.dev.eventmanager.users.domain;
 import chervotkin.dev.eventmanager.security.JwtTokenManager;
 import chervotkin.dev.eventmanager.users.api.SignInRequest;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,5 +31,13 @@ public class AuthenticationService {
             throw new BadCredentialsException("Bad credentials");
         }
         return jwtTokenManager.generateToken(user);
+    }
+
+    public User getCurrentAuthenticatedUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null) {
+            throw new IllegalStateException("Authentication not present");
+        }
+        return (User) authentication.getPrincipal();
     }
 }
