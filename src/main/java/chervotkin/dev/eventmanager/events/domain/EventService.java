@@ -7,6 +7,7 @@ import chervotkin.dev.eventmanager.locations.LocationService;
 import chervotkin.dev.eventmanager.users.domain.AuthenticationService;
 import chervotkin.dev.eventmanager.users.domain.UserRole;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,7 @@ public class EventService {
         return entityMapper.toDomain(event);
     }
 
+    @Transactional
     public void cancelEvent(Long eventId) {
         checkCurrentUserCanModifyEvent(eventId);
         var event = getEventById(eventId);
@@ -87,12 +89,16 @@ public class EventService {
         eventRepository.changeEventStatus(eventId, EventStatus.CANCELLED);
     }
 
+    @Transactional
     public Event updateEvent(Long eventId,
                              @Valid EventUpdateRequestDto updateRequest
     ) {
         checkCurrentUserCanModifyEvent(eventId);
 
-        var event = eventRepository.findById(eventId).orElseThrow();
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Event not found by id=%s".formatted(eventId)
+                        ));
 
 
         if (!event.getStatus().equals(EventStatus.WAIT_START)) {
@@ -135,7 +141,7 @@ public class EventService {
 
         eventRepository.save(event);
 
-        return  getEventById(eventId);
+        return getEventById(eventId);
     }
 
     private void checkCurrentUserCanModifyEvent(Long eventId) {
@@ -177,4 +183,5 @@ public class EventService {
                 .map(entityMapper::toDomain)
                 .toList();
     }
+
 }

@@ -5,7 +5,9 @@ import chervotkin.dev.eventmanager.events.db.EventRegistrationEntity;
 import chervotkin.dev.eventmanager.events.db.EventRegistrationRepository;
 import chervotkin.dev.eventmanager.events.db.EventRepository;
 import chervotkin.dev.eventmanager.users.domain.User;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,14 +29,14 @@ public class EventRegistrationService {
         this.eventEntityMapper = eventEntityMapper;
     }
 
-    public void registerUserOnEvent(
-            User user,
-            Long eventId
-    ) {
-        var event = eventService.getEventById(eventId);
+    @Transactional
+    public void registerUserOnEvent(User user, Long eventId) {
+        var eventEntity = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Event entity wasn't found by id=%s".formatted(eventId)
+                ));
 
-
-        if (user.id().equals(event.ownerId())) {
+        if (user.id().equals(eventEntity.getOwnerId())) {
             throw new IllegalArgumentException("Owner cannot register on his event");
         }
 
@@ -43,14 +45,22 @@ public class EventRegistrationService {
             throw new IllegalArgumentException("User already registered on event");
         }
 
-        if (!event.status().equals(EventStatus.WAIT_START)) {
-            throw new IllegalArgumentException("Cannot register on event with status=%s"
-                    .formatted(event.status()));
+        if (!eventEntity.getStatus().equals(EventStatus.WAIT_START)) {
+            throw new IllegalArgumentException(
+                    "Cannot register on event with status=%s".formatted(eventEntity.getStatus())
+            );
+        }
+
+        var registeredCount = eventEntity.getRegistrationList().size();
+        if(registeredCount >= eventEntity.getMaxPlaces()) {
+            throw new IllegalArgumentException(
+                    "Event if full: registered=%s, maxPlacex=%s"
+                            .formatted(registeredCount, eventEntity.getMaxPlaces())
+            );
         }
 
         registrationRepository.save(
-                new EventRegistrationEntity(null, user.id(),
-                        eventRepository.findById(eventId).orElseThrow())
+                new EventRegistrationEntity(null, user.id(), eventEntity)
         );
     }
 
@@ -60,17 +70,16 @@ public class EventRegistrationService {
     ) {
         var event = eventService.getEventById(eventId);
 
-        var registration = registrationRepository.findRegistration(user.id(), eventId);
-        if (registration.isEmpty()) {
-            throw new IllegalArgumentException("User have not registered on event");
-        }
+        var registration = registrationRepository.findRegistration(user.id(), eventId)
+                .orElseThrow(()-> new IllegalArgumentException("User have not registered on event")
+                );
 
         if (!event.status().equals(EventStatus.WAIT_START)) {
             throw new IllegalArgumentException("Cannot cancel register on event with status=%s"
                     .formatted(event.status()));
         }
 
-        registrationRepository.delete(registration.orElseThrow());
+        registrationRepository.delete(registration);
     }
 
 
