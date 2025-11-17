@@ -141,7 +141,7 @@ public class EventService {
 
         eventRepository.save(event);
 
-        return getEventById(eventId);
+        return entityMapper.toDomain(event);
     }
 
     private void checkCurrentUserCanModifyEvent(Long eventId) {
