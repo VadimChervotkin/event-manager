@@ -1,5 +1,6 @@
 package chervotkin.dev.eventmanager.security;
 
+import chervotkin.dev.eventmanager.users.domain.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +24,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtTokenManager jwtTokenManager;
 
-    public JwtTokenFilter(JwtTokenManager jwtTokenManager) {
+    private final UserService userService;
+
+    public JwtTokenFilter(JwtTokenManager jwtTokenManager, UserService userService) {
         this.jwtTokenManager = jwtTokenManager;
+        this.userService = userService;
     }
 
 
@@ -50,8 +54,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         var login = jwtTokenManager.getLoginFromToken(jwtToken);
         var role = jwtTokenManager.getRoleFromToken(jwtToken);
 
+        var user = userService.getUserByLogin(login);
+
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
-            login,
+            user,
                 null,
                 List.of(new SimpleGrantedAuthority(role))
         );
