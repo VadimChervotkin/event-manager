@@ -4,6 +4,7 @@ import chervotkin.dev.eventmanager.events.api.*;
 import chervotkin.dev.eventmanager.events.db.EventEntity;
 import chervotkin.dev.eventmanager.events.db.EventRegistrationEntity;
 import chervotkin.dev.eventmanager.events.db.EventRepository;
+import chervotkin.dev.eventmanager.kafka.EventChangeProducer;
 import chervotkin.dev.eventmanager.kafka.dto.*;
 import chervotkin.dev.eventmanager.locations.LocationService;
 import chervotkin.dev.eventmanager.users.domain.AuthenticationService;
@@ -34,13 +35,15 @@ public class EventService {
     private final EventEntityMapper entityMapper;
 
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final EventChangeProducer eventChangeProducer;
 
-    public EventService(EventRepository eventRepository, LocationService locationService, AuthenticationService authenticationService, EventEntityMapper entityMapper, ApplicationEventPublisher applicationEventPublisher) {
+    public EventService(EventRepository eventRepository, LocationService locationService, AuthenticationService authenticationService, EventEntityMapper entityMapper, ApplicationEventPublisher applicationEventPublisher, EventChangeProducer eventChangeProducer) {
         this.eventRepository = eventRepository;
         this.locationService = locationService;
         this.authenticationService = authenticationService;
         this.entityMapper = entityMapper;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.eventChangeProducer = eventChangeProducer;
     }
 
     public Event createEvent(EventCreateRequestDto createRequest) {
@@ -207,7 +210,7 @@ public class EventService {
         }
 
         if (changed) {
-            applicationEventPublisher.publishEvent(new EventChangedDomainEvent(msg));
+            eventChangeProducer.send(msg);
         }
 
         return getEventById(eventId);

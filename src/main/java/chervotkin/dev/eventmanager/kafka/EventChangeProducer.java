@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class EventChangeProducer {
     private final Logger log = LoggerFactory.getLogger(EventChangeProducer.class);
     private final KafkaTemplate<String, EventChangeKafkaMessage> kafkaTemplate;
-    private final String topic = "events.changes"; // или берём из @Value
+    private final String topic = "events.changes";
 
     public EventChangeProducer(KafkaTemplate<String, EventChangeKafkaMessage> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;

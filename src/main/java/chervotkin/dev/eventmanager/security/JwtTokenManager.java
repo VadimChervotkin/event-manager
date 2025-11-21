@@ -31,6 +31,8 @@ public class JwtTokenManager {
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.role().name());
+        claims.put("userId", user.id());
+        
         Date issuedTime = new Date();
         Date expirationTime = new Date(issuedTime.getTime() + tokenLifetime);
         return Jwts.builder()
