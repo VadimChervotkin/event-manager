@@ -80,9 +80,10 @@ PUT /api/events/{id}
   "name": "Updated Java Meetup",
   "capacity": 120
 }
+```
+---
 
 ## Запуск проекта
-```bash
 git clone https://github.com/VadimChervotkin/event-manager
 cd event-manager
 docker-compose up
